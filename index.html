@@ -26,7 +26,7 @@
   body {
     min-height: 100vh;
     min-height: 100dvh;
-    overflow: hidden;
+    overflow-x: hidden;
     background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-low) 80%, var(--sky-glow) 130%);
     color: var(--text);
     font-family: "Quicksand", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -78,6 +78,15 @@
     font-size: clamp(1.7rem, 6vw, 2.5rem);
     font-weight: 600;
     line-height: 1.25;
+  }
+
+  .line.big2 {
+    font-family: "Dancing Script", cursive;
+    font-size: clamp(1.35rem, 4.8vw, 1.9rem);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--gold);
+    margin-top: 14px;
   }
 
   .reveal {
@@ -179,17 +188,21 @@
         Hoy quise que no te faltara ninguna: estas flores amarillas son para ti,
         para darte las gracias por cada día, cada risa y cada momento a tu lado.
       </p>
+      <p class="line big2 reveal" data-delay="7000">
+        Aunque alguna vez nos soltamos, volvimos.<br />
+        Volvimos para seguir haciendo crecer nuestras flores, juntos. 🌻
+      </p>
     </section>
 
-    <section class="counter-card reveal" data-delay="6400" aria-live="off">
-      <p class="counter-label">Nuestro noviazgo comenzó el <strong id="startText">22 de julio de 2022</strong> y llevamos juntos…</p>
+    <section class="counter-card reveal" data-delay="9600" aria-live="off">
+      <p class="counter-label">Nuestra historia empezó el <strong id="startText">22 de julio de 2022</strong> y desde entonces…</p>
       <div class="units">
         <div class="unit"><span class="num" id="d">0</span><span class="unit-name">días</span></div>
         <div class="unit"><span class="num" id="h">0</span><span class="unit-name">horas</span></div>
         <div class="unit"><span class="num" id="m">0</span><span class="unit-name">minutos</span></div>
         <div class="unit"><span class="num" id="s">0</span><span class="unit-name">segundos</span></div>
       </div>
-      <p class="counter-foot">y sigue creciendo, segundo a segundo <span class="heart">💛</span></p>
+      <p class="counter-foot">y nuestras flores siguen creciendo <span class="heart">💛</span></p>
     </section>
   </main>
 
@@ -254,13 +267,40 @@
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   };
 
-  function makeFlower(x, scale, delay) {
+  // Zona que ocupan el texto y el contador: las flores que caen ahí
+  // se mantienen bajas para no taparlos.
+  function contentZone() {
+    const rects = ['.message', '.counter-card']
+      .map((q) => document.querySelector(q))
+      .filter(Boolean)
+      .map((el) => el.getBoundingClientRect());
+    if (!rects.length) return { l: 0, r: 0, bottom: 0 };
+    return {
+      l: Math.min(...rects.map((r) => r.left)),
+      r: Math.max(...rects.map((r) => r.right)),
+      bottom: Math.max(...rects.map((r) => r.bottom)),
+    };
+  }
+
+  function makeFlower(x, scale, delay, zone) {
+    let r = Math.max(26, Math.min(W, H) * 0.075) * scale * rand(0.9, 1.15);
+    let h = H * rand(0.26, 0.44) * (0.75 + scale * 0.3);
+
+    const free = Math.max(90, H - zone.bottom - 12); // espacio libre bajo el contador
+    const overlaps = x > zone.l - r && x < zone.r + r;
+    if (overlaps) {
+      r = Math.max(20, Math.min(r, free * 0.3));
+      h = Math.max(50, Math.min(h, free - r * 1.15));
+    } else {
+      h = Math.min(h, H * 0.62);
+    }
+
     return {
       x,
       scale,
       delay,
-      h: H * rand(0.26, 0.44) * (0.75 + scale * 0.3),
-      r: Math.max(26, Math.min(W, H) * 0.075) * scale * rand(0.9, 1.15),
+      h,
+      r,
       bend: rand(-0.22, 0.22),
       swayAmp: rand(5, 11) * scale,
       swaySpeed: rand(0.6, 1.1),
@@ -276,13 +316,14 @@
   }
 
   function build() {
-    const count = Math.max(6, Math.min(15, Math.round(W / 105)));
+    const zone = contentZone();
+    const count = Math.max(7, Math.min(16, Math.round(W / 95)));
     flowers = [];
     // Flores del fondo (más pequeñas) y del frente (más grandes)
     for (let i = 0; i < count; i++) {
       const x = (i + 0.5 + rand(-0.3, 0.3)) * (W / count);
       const front = i % 2 === 0;
-      flowers.push(makeFlower(x, front ? rand(0.95, 1.25) : rand(0.6, 0.85), 400 + i * 260 + rand(0, 300)));
+      flowers.push(makeFlower(x, front ? rand(0.95, 1.25) : rand(0.6, 0.85), 400 + i * 260 + rand(0, 300), zone));
     }
     flowers.sort((a, b) => a.scale - b.scale);
 
@@ -304,7 +345,6 @@
     build();
   }
   window.addEventListener('resize', resize);
-  resize();
 
   function spawnPetal(initial) {
     petals.push({
@@ -565,8 +605,13 @@
     requestAnimationFrame(frame);
   }
 
-  for (let i = 0; i < 6; i++) spawnPetal(true);
-  requestAnimationFrame(frame);
+  // Espera a que carguen las tipografías para medir bien el texto (máx. 1.5 s)
+  const fontsReady = (document.fonts && document.fonts.ready) || Promise.resolve();
+  Promise.race([fontsReady, new Promise((res) => setTimeout(res, 1500))]).then(() => {
+    resize();
+    for (let i = 0; i < 6; i++) spawnPetal(true);
+    requestAnimationFrame(frame);
+  });
 })();
 </script>
 </body>
