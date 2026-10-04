@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Para Giuli 🌼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sky-top: #1b1240;
+    --sky-mid: #3a1f5c;
+    --sky-low: #7a3a62;
+    --sky-glow: #f2a65a;
+    --gold: #ffd426;
+    --text: #fff8e1;
+    --card: rgba(255, 248, 225, 0.10);
+    --card-border: rgba(255, 220, 90, 0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-low) 80%, var(--sky-glow) 130%);
+    color: var(--text);
+    font-family: "Quicksand", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 3vh, 28px);
+    padding: clamp(24px, 6vh, 64px) 20px 0;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .message { max-width: 620px; }
+
+  .title {
+    font-family: "Dancing Script", "Brush Script MT", cursive;
+    font-weight: 700;
+    font-size: clamp(2.6rem, 9vw, 4.4rem);
+    line-height: 1.1;
+    color: var(--gold);
+    text-shadow: 0 0 24px rgba(255, 212, 38, 0.55), 0 2px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .line {
+    font-size: clamp(1rem, 3.6vw, 1.3rem);
+    font-weight: 500;
+    line-height: 1.6;
+    margin-top: 10px;
+    text-shadow: 0 1px 10px rgba(20, 8, 40, 0.7);
+  }
+
+  .line.big {
+    font-family: "Dancing Script", cursive;
+    font-size: clamp(1.7rem, 6vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+    transition: opacity 1.4s ease, transform 1.4s ease, filter 1.4s ease;
+  }
+  .reveal.show { opacity: 1; transform: none; filter: none; }
+
+  .counter-card {
+    width: min(94vw, 560px);
+    padding: 16px 14px 14px;
+    border-radius: 22px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(10, 4, 30, 0.45), inset 0 0 30px rgba(255, 212, 38, 0.06);
+  }
+
+  .counter-label {
+    font-size: clamp(0.78rem, 2.6vw, 0.95rem);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    opacity: 0.92;
+    margin-bottom: 10px;
+  }
+  .counter-label strong { color: var(--gold); font-weight: 600; }
+
+  .units {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(6px, 2vw, 12px);
+  }
+
+  .unit {
+    padding: 10px 4px 8px;
+    border-radius: 14px;
+    background: rgba(27, 18, 64, 0.45);
+    border: 1px solid rgba(255, 220, 90, 0.18);
+  }
+
+  .num {
+    display: block;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.5rem, 7.2vw, 2.5rem);
+    line-height: 1.1;
+    color: var(--gold);
+    text-shadow: 0 0 14px rgba(255, 212, 38, 0.45);
+  }
+  .num.tick { animation: tick 0.45s ease; }
+
+  @keyframes tick {
+    0% { transform: translateY(-5px) scale(1.08); opacity: 0.6; }
+    100% { transform: none; opacity: 1; }
+  }
+
+  .unit-name {
+    display: block;
+    margin-top: 2px;
+    font-size: clamp(0.62rem, 2.4vw, 0.8rem);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.8;
+  }
+
+  .counter-foot {
+    margin-top: 10px;
+    font-size: clamp(0.78rem, 2.6vw, 0.92rem);
+    opacity: 0.85;
+  }
+
+  .heart { display: inline-block; animation: beat 1.4s ease-in-out infinite; }
+  @keyframes beat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.25); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.18); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { transition-duration: 0.01s; }
+    .heart, .num.tick { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+
+  <main class="content">
+    <section class="message">
+      <h1 class="title reveal" data-delay="600">Para Giuli 🌼</h1>
+      <p class="line big reveal" data-delay="2200">Te faltaron flores, mi amor.</p>
+      <p class="line reveal" data-delay="4200">
+        Hoy quise que no te faltara ninguna: estas flores amarillas son para ti,
+        para darte las gracias por cada día, cada risa y cada momento a tu lado.
+      </p>
+    </section>
+
+    <section class="counter-card reveal" data-delay="6400" aria-live="off">
+      <p class="counter-label">Nuestro noviazgo comenzó el <strong id="startText">22 de julio de 2022</strong> y llevamos juntos…</p>
+      <div class="units">
+        <div class="unit"><span class="num" id="d">0</span><span class="unit-name">días</span></div>
+        <div class="unit"><span class="num" id="h">0</span><span class="unit-name">horas</span></div>
+        <div class="unit"><span class="num" id="m">0</span><span class="unit-name">minutos</span></div>
+        <div class="unit"><span class="num" id="s">0</span><span class="unit-name">segundos</span></div>
+      </div>
+      <p class="counter-foot">y sigue creciendo, segundo a segundo <span class="heart">💛</span></p>
+    </section>
+  </main>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ───────── Configuración ───────── */
+  // Inicio del noviazgo: 22 de julio de 2022 (mes 6 = julio, los meses empiezan en 0)
+  const START = new Date(2022, 6, 22, 0, 0, 0);
+
+  /* ───────── Contador ───────── */
+  const els = {
+    d: document.getElementById('d'),
+    h: document.getElementById('h'),
+    m: document.getElementById('m'),
+    s: document.getElementById('s'),
+  };
+  const last = {};
+  const pad = (n) => String(n).padStart(2, '0');
+
+  function setNum(key, value) {
+    if (last[key] === value) return;
+    last[key] = value;
+    const el = els[key];
+    el.textContent = value;
+    el.classList.remove('tick');
+    void el.offsetWidth; // reinicia la animación
+    el.classList.add('tick');
+  }
+
+  function updateCounter() {
+    const diff = Math.max(0, Date.now() - START.getTime());
+    const totalSec = Math.floor(diff / 1000);
+    const days = Math.floor(totalSec / 86400);
+    setNum('d', days.toLocaleString('es'));
+    setNum('h', pad(Math.floor((totalSec % 86400) / 3600)));
+    setNum('m', pad(Math.floor((totalSec % 3600) / 60)));
+    setNum('s', pad(totalSec % 60));
+  }
+  updateCounter();
+  setInterval(updateCounter, 250);
+
+  /* ───────── Texto que aparece poco a poco ───────── */
+  document.querySelectorAll('.reveal').forEach((el) => {
+    setTimeout(() => el.classList.add('show'), Number(el.dataset.delay || 0));
+  });
+
+  /* ───────── Escena de flores ───────── */
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  let flowers = [];
+  let petals = [];
+  let fireflies = [];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+  const easeOutBack = (t) => {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  };
+
+  function makeFlower(x, scale, delay) {
+    return {
+      x,
+      scale,
+      delay,
+      h: H * rand(0.26, 0.44) * (0.75 + scale * 0.3),
+      r: Math.max(26, Math.min(W, H) * 0.075) * scale * rand(0.9, 1.15),
+      bend: rand(-0.22, 0.22),
+      swayAmp: rand(5, 11) * scale,
+      swaySpeed: rand(0.6, 1.1),
+      phase: rand(0, Math.PI * 2),
+      spin: rand(-0.12, 0.12),
+      rot: rand(0, Math.PI * 2),
+      petals: Math.round(rand(12, 16)),
+      leaves: [
+        { t: rand(0.28, 0.4), side: 1 },
+        { t: rand(0.5, 0.65), side: -1 },
+      ],
+    };
+  }
+
+  function build() {
+    const count = Math.max(6, Math.min(15, Math.round(W / 105)));
+    flowers = [];
+    // Flores del fondo (más pequeñas) y del frente (más grandes)
+    for (let i = 0; i < count; i++) {
+      const x = (i + 0.5 + rand(-0.3, 0.3)) * (W / count);
+      const front = i % 2 === 0;
+      flowers.push(makeFlower(x, front ? rand(0.95, 1.25) : rand(0.6, 0.85), 400 + i * 260 + rand(0, 300)));
+    }
+    flowers.sort((a, b) => a.scale - b.scale);
+
+    const ff = Math.round(Math.max(18, Math.min(46, W / 28)));
+    fireflies = Array.from({ length: ff }, () => ({
+      x: rand(0, W), y: rand(H * 0.1, H),
+      r: rand(1, 2.6), s: rand(0.15, 0.5),
+      p: rand(0, 6.28), a: rand(0.3, 0.9),
+    }));
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    build();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function spawnPetal(initial) {
+    petals.push({
+      x: rand(0, W),
+      y: initial ? rand(-H * 0.2, H) : -20,
+      size: rand(5, 10),
+      vy: rand(18, 42),
+      sway: rand(10, 28),
+      sp: rand(0.5, 1.3),
+      ph: rand(0, 6.28),
+      rot: rand(0, 6.28),
+      vr: rand(-1.4, 1.4),
+      a: rand(0.55, 0.95),
+    });
+  }
+
+  /* ----- Dibujo ----- */
+  function drawBackground(t) {
+    // Resplandor cálido en el horizonte
+    const g = ctx.createRadialGradient(W / 2, H * 1.02, 0, W / 2, H * 1.02, Math.max(W, H) * 0.75);
+    g.addColorStop(0, 'rgba(255, 190, 90, 0.55)');
+    g.addColorStop(0.45, 'rgba(255, 140, 90, 0.18)');
+    g.addColorStop(1, 'rgba(255, 140, 90, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Estrellitas titilando
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 40; i++) {
+      const sx = ((i * 9301 + 49297) % 233280) / 233280 * W;
+      const sy = (((i * 7919 + 1301) % 104729) / 104729) * H * 0.55;
+      ctx.globalAlpha = 0.25 + 0.55 * Math.abs(Math.sin(t * 0.0008 * (0.5 + (i % 5) * 0.3) + i));
+      ctx.fillRect(sx, sy, 1.6, 1.6);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function stemPoint(f, tt, g, swayX) {
+    const x0 = f.x, y0 = H + 6;
+    const x2 = f.x + swayX + f.bend * f.h * g;
+    const y2 = y0 - f.h * g;
+    const cx = f.x + f.bend * f.h * 1.1 * g + swayX * 0.35;
+    const cy = y0 - f.h * g * 0.55;
+    const u = 1 - tt;
+    return {
+      x: u * u * x0 + 2 * u * tt * cx + tt * tt * x2,
+      y: u * u * y0 + 2 * u * tt * cy + tt * tt * y2,
+      ang: Math.atan2(
+        2 * u * (cy - y0) + 2 * tt * (y2 - cy),
+        2 * u * (cx - x0) + 2 * tt * (x2 - cx)
+      ),
+    };
+  }
+
+  function drawLeaf(x, y, ang, len, side, grow, sway) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang + side * (0.9 + sway * 0.02));
+    ctx.scale(grow, grow);
+    const lg = ctx.createLinearGradient(0, 0, len, 0);
+    lg.addColorStop(0, '#2f7d32');
+    lg.addColorStop(1, '#7cc24a');
+    ctx.fillStyle = lg;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(len * 0.5, -len * 0.32, len, 0);
+    ctx.quadraticCurveTo(len * 0.5, len * 0.32, 0, 0);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(20, 70, 25, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(len * 0.92, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawHead(f, x, y, bloom, t, tilt) {
+    const R = f.r * bloom;
+    if (R < 1) return;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(f.rot + t * 0.00006 * f.spin * 60 + tilt * 0.5);
+
+    // Aura suave
+    const aura = ctx.createRadialGradient(0, 0, R * 0.4, 0, 0, R * 1.9);
+    aura.addColorStop(0, 'rgba(255, 220, 60, 0.30)');
+    aura.addColorStop(1, 'rgba(255, 220, 60, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 1.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    const n = f.petals;
+    for (let ring = 0; ring < 2; ring++) {
+      const len = R * (ring === 0 ? 1 : 0.82);
+      const grad = ctx.createRadialGradient(0, 0, R * 0.15, 0, 0, len);
+      if (ring === 0) {
+        grad.addColorStop(0, '#f0a800');
+        grad.addColorStop(1, '#ffc81a');
+      } else {
+        grad.addColorStop(0, '#ffc21a');
+        grad.addColorStop(1, '#ffe650');
+      }
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = 'rgba(190, 120, 0, 0.35)';
+      ctx.lineWidth = 0.8;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + (ring ? Math.PI / n : 0) + Math.sin(t * 0.0012 + i + f.phase) * 0.025;
+        ctx.save();
+        ctx.rotate(a);
+        ctx.beginPath();
+        ctx.moveTo(len * 0.12, 0);
+        ctx.bezierCurveTo(len * 0.35, -len * 0.26, len * 0.82, -len * 0.2, len, 0);
+        ctx.bezierCurveTo(len * 0.82, len * 0.2, len * 0.35, len * 0.26, len * 0.12, 0);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Centro con semillitas en espiral
+    const cr = R * 0.34;
+    const cg = ctx.createRadialGradient(-cr * 0.25, -cr * 0.25, cr * 0.1, 0, 0, cr);
+    cg.addColorStop(0, '#b8741a');
+    cg.addColorStop(1, '#5c2e05');
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.arc(0, 0, cr, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 200, 90, 0.75)';
+    const golden = 2.399963;
+    const seeds = 46;
+    for (let i = 1; i < seeds; i++) {
+      const rr = cr * 0.92 * Math.sqrt(i / seeds);
+      const aa = i * golden;
+      ctx.beginPath();
+      ctx.arc(Math.cos(aa) * rr, Math.sin(aa) * rr, Math.max(0.6, cr * 0.05), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFlower(f, t) {
+    const local = t - f.delay;
+    if (local <= 0) return;
+
+    const grow = easeOutCubic(clamp01(local / 2600));
+    const bloom = easeOutBack(clamp01((local - 1700) / 1700));
+    const swayX = Math.sin(t * 0.001 * f.swaySpeed + f.phase) * f.swayAmp * grow;
+
+    // Tallo
+    const steps = 28;
+    const sw = Math.max(3, f.r * 0.12);
+    const sg = ctx.createLinearGradient(0, H, 0, H - f.h);
+    sg.addColorStop(0, '#1f6b2a');
+    sg.addColorStop(1, '#5fae3f');
+    ctx.strokeStyle = sg;
+    ctx.lineWidth = sw;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const p = stemPoint(f, (i / steps), grow, swayX);
+      if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+
+    // Hojas
+    for (const lf of f.leaves) {
+      const lg = easeOutCubic(clamp01((grow - lf.t) / 0.25));
+      if (lg <= 0) continue;
+      const p = stemPoint(f, lf.t, grow, swayX);
+      drawLeaf(p.x, p.y, p.ang + (lf.side > 0 ? 0.5 : -0.5), f.r * 1.05, lf.side, lg, swayX);
+    }
+
+    // Flor
+    const top = stemPoint(f, 1, grow, swayX);
+    // El capullo (bolita verde) se ve antes de abrir
+    if (bloom < 0.35) {
+      ctx.fillStyle = '#4f9a37';
+      ctx.beginPath();
+      ctx.arc(top.x, top.y, f.r * 0.22 * (1 + bloom), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    drawHead(f, top.x, top.y, bloom, t, swayX * 0.02);
+  }
+
+  function drawFireflies(t, dt) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const p of fireflies) {
+      p.y -= p.s * dt * 0.02;
+      p.x += Math.sin(t * 0.0005 + p.p) * 0.2;
+      if (p.y < -10) { p.y = H + 10; p.x = rand(0, W); }
+      const tw = 0.5 + 0.5 * Math.sin(t * 0.002 + p.p * 3);
+      const rg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+      rg.addColorStop(0, `rgba(255, 230, 120, ${p.a * tw})`);
+      rg.addColorStop(1, 'rgba(255, 230, 120, 0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPetals(t, dt) {
+    const sec = dt / 1000;
+    for (let i = petals.length - 1; i >= 0; i--) {
+      const p = petals[i];
+      p.y += p.vy * sec;
+      p.x += Math.sin(t * 0.001 * p.sp + p.ph) * p.sway * sec;
+      p.rot += p.vr * sec;
+      if (p.y > H + 20) { petals.splice(i, 1); continue; }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.scale(1, 0.55 + 0.45 * Math.abs(Math.sin(t * 0.002 * p.sp + p.ph)));
+      ctx.globalAlpha = p.a;
+      ctx.fillStyle = '#ffd426';
+      ctx.beginPath();
+      ctx.moveTo(0, -p.size);
+      ctx.quadraticCurveTo(p.size * 0.8, 0, 0, p.size);
+      ctx.quadraticCurveTo(-p.size * 0.8, 0, 0, -p.size);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let startTime = null;
+  let prev = 0;
+  let petalTimer = 0;
+
+  function frame(now) {
+    if (startTime === null) { startTime = now; prev = now; }
+    const t = now - startTime;
+    const dt = Math.min(now - prev, 60);
+    prev = now;
+
+    ctx.clearRect(0, 0, W, H);
+    drawBackground(t);
+    drawFireflies(t, dt);
+
+    for (const f of flowers) drawFlower(f, reduce ? t + 6000 : t);
+
+    // Pétalos que caen suavemente cuando ya hay flores abiertas
+    if (t > 3000 && !reduce) {
+      petalTimer += dt;
+      if (petalTimer > 700 && petals.length < 40) {
+        petalTimer = 0;
+        spawnPetal(false);
+      }
+    }
+    drawPetals(t, dt);
+
+    requestAnimationFrame(frame);
+  }
+
+  for (let i = 0; i < 6; i++) spawnPetal(true);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
